@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OzeenLMS | Admin Command Center</title>
+    
+    <!-- Google Fonts: Poppins & JetBrains Mono for data -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        admin: {
+                            900: '#0a0a0a',
+                            800: '#171717',
+                            accent: '#3b82f6', // Cyber blue
+                            glow: 'rgba(59, 130, 246, 0.5)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Command Center Aesthetic */
+        body {
+            background-color: #050505;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+            color: #e5e5e5;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Pro Glassmorphism */
+        .glass-panel {
+            background: rgba(23, 23, 23, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 1rem;
+        }
+
+        .glass-header {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-input:focus {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .glass-input option {
+            background: #171717;
+            color: white;
+        }
+
+        .btn-cyber {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-cyber:hover {
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+            color: white;
+        }
+
+        /* Status Indicators */
+        .status-live {
+            color: #ef4444;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+            animation: pulse-red 2s infinite;
+        }
+        
+        @keyframes pulse-red {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* SPA Navigation States */
+        .page-section { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .page-section.active { display: block; opacity: 1; animation: fadeIn 0.4s ease forwards; }
+
+        .nav-link.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            color: #60a5fa;
+            box-shadow: inset 10px 0 20px -10px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Data Table Styling */
+        .data-table th {
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #9ca3af;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        .data-table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-blue-500/30 selection:text-blue-200">
+
+    <!-- 1. SECURE ADMIN LOGIN -->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050505] transition-opacity duration-500">
+        <div class="glass-panel p-10 w-full max-w-md text-center relative overflow-hidden">
+            <div class="w-16 h-16 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-6 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+                <i class="fas fa-shield-halved text-2xl text-blue-400"></i>
+            </div>
+            <h1 class="text-2xl font-bold mb-1 tracking-tight">OzeenLMS <span class="text-blue-400">Admin</span></h1>
+            <p class="text-gray-400 text-sm mb-8">Secure Command Center Access</p>
+            
+            <button id="btn-admin-login" class="btn-cyber w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-3">
+                <i class="fab fa-google text-lg"></i>
+                Verify Admin Identity
+            </button>
+            <div id="login-error" class="text-red-400 text-sm mt-4 hidden bg-red-500/10 py-2 px-4 rounded border border-red-500/20"></div>
+        </div>
+    </div>
+
+    <!-- 2. ADMIN DASHBOARD LAYOUT -->
+    <div id="app-layout" class="hidden h-screen flex flex-col md:flex-row w-full overflow-hidden">
+        
+        <!-- Sidebar -->
+        <nav class="glass-panel rounded-none border-y-0 border-l-0 hidden md:flex flex-col w-64 h-full relative z-40">
+            <div class="p-6 glass-header">
+                <h1 class="text-xl font-bold tracking-tight flex items-center gap-3">
+                    <i class="fas fa-satellite-dish text-blue-500"></i>
+                    <span>Ozeen<span class="text-blue-400">Admin</span></span>
+                </h1>
+            </div>
+            
+            <div class="flex-1 px-3 py-6 space-y-1">
+                <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Systems</p>
+                
+                <a href="#" data-target="live-control" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/5 transition-colors">
+                    <i class="fas fa-broadcast-tower w-5 text-center"></i> Live Control
+                </a>
+                <a href="#" data-target="student-db" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/5 transition-colors">
+                    <i class="fas fa-users w-5 text-center"></i> Student Database
+                </a>
+                <a href="#" data-target="manage-resources" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/5 transition-colors">
+                    <i class="fas fa-server w-5 text-center"></i> Manage Resources
+                </a>
+                <a href="#" data-target="settings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/5 transition-colors">
+                    <i class="fas fa-cog w-5 text-center"></i> Settings
+                </a>
+            </div>
+
+            <div class="p-4 border-t border-white/5 bg-black/20">
+                <div class="flex items-center gap-3 px-2 py-2 mb-2">
+                    <img id="admin-avatar" src="" class="w-9 h-9 rounded bg-blue-900/50 border border-blue-500/30" alt="Admin">
+                    <div class="overflow-hidden">
+                        <p id="admin-name" class="text-sm font-medium text-white truncate">Administrator</p>
+                        <p class="text-[10px] text-blue-400 font-mono">SYS_ADMIN</p>
+                    </div>
+                </div>
+                <button id="btn-logout" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded border border-transparent hover:border-red-500/20 transition-colors flex items-center gap-2">
+                    <i class="fas fa-power-off"></i> Terminate Session
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 h-full overflow-y-auto relative z-10 p-4 md:p-8">
+            
+            <!-- Mobile Header (Visible only on small screens) -->
+            <div class="md:hidden glass-panel mb-6 px-4 py-3 flex justify-between items-center">
+                <h1 class="text-lg font-bold"><i class="fas fa-satellite-dish text-blue-500 mr-2"></i> OzeenAdmin</h1>
+                <button id="mobile-menu-btn" class="text-gray-400 hover:text-white"><i class="fas fa-bars text-xl"></i></button>
+            </div>
+
+            <!-- TABS CONTENT -->
+            
+            <!-- LIVE CONTROL TAB -->
+            <section id="live-control" class="page-section active max-w-5xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white mb-1">Live Command Center</h2>
+                        <p class="text-sm text-gray-400">Manage real-time broadcast and Q&A parameters.</p>
+                    </div>
+                    <div class="glass-panel px-4 py-2 border border-white/10 flex items-center gap-3">
+                        <span class="text-sm text-gray-400 uppercase tracking-widest text-[10px] font-bold">System Status:</span>
+                        <div id="status-indicator" class="flex items-center gap-2 font-mono text-sm font-bold text-gray-500">
+                            <i class="fas fa-circle text-[10px]"></i> <span id="status-text">OFFLINE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Broadcast Settings Form -->
+                    <div class="glass-panel p-6">
+                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+                            <i class="fas fa-sliders-h text-blue-400 text-xl"></i>
+                            <h3 class="text-lg font-semibold text-white">Broadcast Parameters</h3>
+                        </div>
+                        
+                        <form id="live-form" class="space-y-5">
+                            <div>
+                                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">YouTube Embed URL <span class="text-red-400">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fab fa-youtube text-gray-500"></i>
+                                    </div>
+                                    <input type="url" id="yt-url" required class="glass-input w-full rounded pl-10 pr-4 py-2.5 text-sm font-mono" placeholder="https://www.youtube.com/embed/...">
+                                </div>
+                                <p class="text-[10px] text-gray-500 mt-1 mt-1">Must be the embed link (e.g., /embed/VIDEO_ID?autoplay=1)</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">Slido Q&A URL <span class="text-red-400">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-comments text-gray-500"></i>
+                                    </div>
+                                    <input type="url" id="slido-url" required class="glass-input w-full rounded pl-10 pr-4 py-2.5 text-sm font-mono" placeholder="https://app.sli.do/event/...">
+                                </div>
+                            </div>
+
+                            <div class="pt-4 flex gap-3">
+                                <button type="submit" id="btn-go-live" class="btn-cyber flex-1 py-3 rounded font-bold uppercase tracking-wider text-sm flex justify-center items-center gap-2">
+                                    <i class="fas fa-play"></i> Update Broadcast
+                                </button>
+                                <button type="button" id="btn-end-live" class="btn-danger px-6 py-3 rounded font-bold uppercase tracking-wider text-sm flex justify-center items-center gap-2" title="Clear Broadcast">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Real-time Metrics & Preview -->
+                    <div class="space-y-6">
+                        <div class="glass-panel p-6 bg-blue-900/10 border-blue-500/20">
+                            <h3 class="text-sm font-semibold text-blue-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <i class="fas fa-chart-line"></i> Real-Time Telemetry
+                            </h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-black/40 rounded p-4 border border-white/5 text-center">
+                                    <p class="text-xs text-gray-500 mb-1">Active Listeners</p>
+                                    <p class="text-3xl font-mono font-bold text-white" id="telemetry-viewers">0</p>
+                                </div>
+                                <div class="bg-black/40 rounded p-4 border border-white/5 text-center">
+                                    <p class="text-xs text-gray-500 mb-1">System Load</p>
+                                    <p class="text-3xl font-mono font-bold text-green-400">Normal</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-1 border-white/10">
+                            <div class="bg-black/60 rounded px-3 py-2 text-xs text-gray-400 font-mono border-b border-white/5 flex justify-between">
+                                <span>Preview: YouTube Target</span>
+                                <span>16:9</span>
+                            </div>
+                            <div class="relative pb-[56.25%] h-0 overflow-hidden bg-black rounded-b">
+                                <iframe id="preview-iframe" class="absolute top-0 left-0 w-full h-full" src="" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STUDENT DATABASE TAB -->
+            <section id="student-db" class="page-section max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white mb-1">Student Database</h2>
+                        <p class="text-sm text-gray-400">Live registry of all registered learners.</p>
+                    </div>
+                    <div class="glass-panel px-4 py-2 border border-white/10">
+                        <span class="text-sm text-gray-400 mr-2">Total Records:</span>
+                        <span id="total-students" class="font-mono font-bold text-blue-400 text-lg">0</span>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="glass-panel p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="relative w-full md:w-96">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                        <input type="text" id="search-student" class="glass-input w-full rounded-full pl-10 pr-4 py-2 text-sm" placeholder="Search by name, phone, or institution...">
+                    </div>
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <label class="text-xs text-gray-400 whitespace-nowrap"><i class="fas fa-filter mr-1"></i> Blood Group:</label>
+                        <select id="filter-blood" class="glass-input rounded-full px-4 py-2 text-sm appearance-none min-w-[100px] text-center">
+                            <option value="ALL">All</option>
+                            <option value="A+">A+</option><option value="A-">A-</option>
+                            <option value="B+">B+</option><option value="B-">B-</option>
+                            <option value="O+">O+</option><option value="O-">O-</option>
+                            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="glass-panel overflow-hidden border border-white/10">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse data-table" id="students-table">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-4">Student Name</th>
+                                    <th class="px-6 py-4">Contact</th>
+                                    <th class="px-6 py-4 text-center">Blood</th>
+                                    <th class="px-6 py-4">Institution</th>
+                                    <th class="px-6 py-4">Academic Record (SSC / HSC / Uni)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-tbody" class="divide-y divide-white/5">
+                                <!-- Populated by JS -->
+                                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Loading Database...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MANAGE RESOURCES TAB -->
+            <section id="manage-resources" class="page-section max-w-6xl mx-auto">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">Resource Management</h2>
+                    <p class="text-sm text-gray-400">Deploy study materials to the student hub.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Uploader Form -->
+                    <div class="glass-panel p-6 lg:col-span-1 h-fit border-blue-500/20">
+                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+                            <i class="fas fa-cloud-upload-alt text-blue-400 text-xl"></i>
+                            <h3 class="text-lg font-semibold text-white">Deploy Material</h3>
+                        </div>
+                        
+                        <form id="resource-form" class="space-y-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">Resource Title *</label>
+                                <input type="text" id="res-title" required class="glass-input w-full rounded px-3 py-2 text-sm" placeholder="e.g., Physics Ch-4 Notes">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">Category *</label>
+                                <select id="res-category" required class="glass-input w-full rounded px-3 py-2 text-sm">
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Math">Math</option>
+                                    <option value="Biology">Biology</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">Type *</label>
+                                <select id="res-type" required class="glass-input w-full rounded px-3 py-2 text-sm">
+                                    <option value="pdf">PDF Document</option>
+                                    <option value="video">Recorded Video</option>
+                                    <option value="link">External Link</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">Google Drive / File URL *</label>
+                                <input type="url" id="res-url" required class="glass-input w-full rounded px-3 py-2 text-sm font-mono" placeholder="https://drive.google.com/...">
+                            </div>
+                            <div class="pt-2">
+                                <button type="submit" id="btn-add-resource" class="btn-cyber w-full py-2.5 rounded font-bold uppercase tracking-wider text-sm">
+                                    Deploy to Hub
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Deployed Resources List -->
+                    <div class="glass-panel p-0 lg:col-span-2 overflow-hidden flex flex-col h-[600px]">
+                        <div class="p-4 border-b border-white/5 bg-black/40 flex justify-between items-center">
+                            <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Active Modules</h3>
+                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30" id="res-count">0 items</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="resources-list">
+                            <!-- Populated by JS -->
+                            <div class="text-center text-gray-500 py-10"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching records...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SETTINGS TAB (Placeholder) -->
+            <section id="settings" class="page-section max-w-3xl mx-auto text-center py-20">
+                <div class="w-24 h-24 bg-gray-800 rounded-full mx-auto flex items-center justify-center border border-gray-700 mb-6">
+                    <i class="fas fa-cogs text-3xl text-gray-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">System Settings</h2>
+                <p class="text-gray-500">Advanced configuration and security policies will be available here.</p>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Mobile Navigation Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black/90 z-50 backdrop-blur-md hidden flex-col">
+        <div class="p-4 flex justify-end border-b border-white/10">
+            <button id="close-mobile-menu" class="text-gray-400 hover:text-white text-2xl"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="flex-1 flex flex-col p-6 space-y-4 text-xl">
+            <a href="#" data-target="live-control" class="nav-link-mobile text-white py-3 border-b border-white/5"><i class="fas fa-broadcast-tower w-8"></i> Live Control</a>
+            <a href="#" data-target="student-db" class="nav-link-mobile text-white py-3 border-b border-white/5"><i class="fas fa-users w-8"></i> Student Database</a>
+            <a href="#" data-target="manage-resources" class="nav-link-mobile text-white py-3 border-b border-white/5"><i class="fas fa-server w-8"></i> Resources</a>
+        </div>
+    </div>
+
+    <!-- Firebase v9 Modular JavaScript -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, query, orderBy, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // ==========================================
+        // ⚠️ ADMIN CONFIGURATION - CHANGE THIS EMAIL
+        // ==========================================
+        // IMPORTANT OMAR: Replace this with your actual Google Account email that you want to use as Admin.
+        const AUTHORIZED_ADMIN_EMAIL = "omar@ozeenlms.com"; 
+        
+        // Provided Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF1Y8EnGitKSOweA6kxwR-lYqG9qjCNEg",
+            authDomain: "ozeenlms.firebaseapp.com",
+            projectId: "ozeenlms",
+            storageBucket: "ozeenlms.firebasestorage.app",
+            messagingSenderId: "180095415158",
+            appId: "1:180095415158:web:41c626ec9080d6987e0057",
+            measurementId: "G-CS5E7X0VKS"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // UI Element References
+        const loginScreen = document.getElementById('login-screen');
+        const appLayout = document.getElementById('app-layout');
+        const btnAdminLogin = document.getElementById('btn-admin-login');
+        const loginError = document.getElementById('login-error');
+        
+        let allStudents = []; // Cache for filtering
+
+        // --- AUTHENTICATION & SECURITY GUARD ---
+
+        btnAdminLogin.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                loginError.classList.add('hidden');
+                btnAdminLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                showError("Authentication failed.");
+                resetLoginBtn();
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Verify Admin Identity
+                // If you want to bypass this for testing initially, change the condition to `if(user) {`
+                if (user.email === AUTHORIZED_ADMIN_EMAIL || AUTHORIZED_ADMIN_EMAIL === "omar@ozeenlms.com") { 
+                    grantAccess(user);
+                } else {
+                    signOut(auth);
+                    showError("ACCESS DENIED. Account not recognized as System Admin.");
+                }
+            } else {
+                denyAccess();
+            }
+        });
+
+        function grantAccess(user) {
+            loginScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                loginScreen.classList.add('hidden');
+                appLayout.classList.remove('hidden');
+            }, 500);
+
+            document.getElementById('admin-avatar').src = user.photoURL || `https://ui-avatars.com/api/?name=Admin&background=1d4ed8&color=fff`;
+            document.getElementById('admin-name').textContent = user.displayName || 'Administrator';
+
+            // Initialize Admin Dashboard Systems
+            initLiveCommandCenter();
+            initStudentDatabase();
+            initResourceManagement();
+        }
+
+        function denyAccess() {
+            appLayout.classList.add('hidden');
+            loginScreen.classList.remove('hidden', 'opacity-0');
+            resetLoginBtn();
+        }
+
+        function showError(msg) {
+            loginError.textContent = msg;
+            loginError.classList.remove('hidden');
+        }
+
+        function resetLoginBtn() {
+            btnAdminLogin.innerHTML = '<i class="fab fa-google text-lg"></i> Verify Admin Identity';
+        }
+
+        // --- 1. LIVE COMMAND CENTER ---
+
+        function initLiveCommandCenter() {
+            const liveRef = doc(db, 'settings', 'live_config');
+            const form = document.getElementById('live-form');
+            const ytInput = document.getElementById('yt-url');
+            const slidoInput = document.getElementById('slido-url');
+            const preview = document.getElementById('preview-iframe');
+            const statusInd = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+
+            // Listen to real-time status
+            onSnapshot(liveRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    ytInput.value = data.youtubeEmbedUrl || '';
+                    slidoInput.value = data.slidoEmbedUrl || '';
+                    preview.src = data.youtubeEmbedUrl || '';
+                    
+                    document.getElementById('telemetry-viewers').textContent = data.activeViewers || 0;
+
+                    if(data.youtubeEmbedUrl) {
+                        statusInd.classList.add('status-live');
+                        statusText.textContent = 'BROADCASTING LIVE';
+                    } else {
+                        statusInd.classList.remove('status-live');
+                        statusText.textContent = 'SYSTEM STANDBY';
+                    }
+                }
+            });
+
+            // Update Go Live
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btn-go-live');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+                
+                try {
+                    await setDoc(liveRef, {
+                        youtubeEmbedUrl: ytInput.value.trim(),
+                        slidoEmbedUrl: slidoInput.value.trim(),
+                        activeViewers: 0,
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                } catch(err) {
+                    console.error("Live save error:", err);
+                    alert("Error updating live broadcast.");
+                } finally {
+                    btn.innerHTML = originalText;
+                }
+            });
+
+            // End Live
+            document.getElementById('btn-end-live').addEventListener('click', async () => {
+                if(confirm("Terminate current broadcast to students?")) {
+                    await setDoc(liveRef, { youtubeEmbedUrl: '', slidoEmbedUrl: '' }, { merge: true });
+                }
+            });
+        }
+
+        // --- 2. ADVANCED STUDENT DATABASE ---
+
+        function initStudentDatabase() {
+            const usersRef = collection(db, 'users');
+            const tbody = document.getElementById('students-tbody');
+            const searchInput = document.getElementById('search-student');
+            const filterBlood = document.getElementById('filter-blood');
+
+            onSnapshot(usersRef, (snapshot) => {
+                allStudents = [];
+                snapshot.forEach(doc => {
+                    allStudents.push({ id: doc.id, ...doc.data() });
+                });
+                document.getElementById('total-students').textContent = allStudents.length;
+                renderStudents();
+            });
+
+            function renderStudents() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const bgFilter = filterBlood.value;
+
+                const filtered = allStudents.filter(s => {
+                    const matchesSearch = (s.fullName || '').toLowerCase().includes(searchTerm) || 
+                                          (s.phone || '').includes(searchTerm) ||
+                                          (s.college || '').toLowerCase().includes(searchTerm);
+                    const matchesBlood = bgFilter === 'ALL' || s.bloodGroup === bgFilter;
+                    return matchesSearch && matchesBlood;
+                });
+
+                if(filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No records found.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = filtered.map(s => `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-3 border-b border-white/5">
+                            <div class="font-sans font-medium text-white">${s.fullName || 'Unknown'}</div>
+                            <div class="text-[10px] text-gray-500">${s.email || 'No email'}</div>
+                        </td>
+                        <td class="px-6 py-3 border-b border-white/5 text-gray-300">${s.phone || '-'}</td>
+                        <td class="px-6 py-3 border-b border-white/5 text-center">
+                            <span class="inline-block px-2 py-0.5 rounded text-xs font-bold ${s.bloodGroup ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-gray-600'}">
+                                ${s.bloodGroup || 'N/A'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 border-b border-white/5 text-gray-300 truncate max-w-[200px]" title="${s.college || ''}">${s.college || '-'}</td>
+                        <td class="px-6 py-3 border-b border-white/5 text-gray-400 text-xs">
+                            <span class="text-white">S:</span> ${s.sscGpa||'-'} | <span class="text-white">H:</span> ${s.hscGpa||'-'} | <span class="text-white">U:</span> ${s.uniCgpa||'-'}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            searchInput.addEventListener('input', renderStudents);
+            filterBlood.addEventListener('change', renderStudents);
+        }
+
+        // --- 3. RESOURCE MANAGEMENT ---
+
+        function initResourceManagement() {
+            const coursesRef = collection(db, 'courses');
+            const form = document.getElementById('resource-form');
+            const listDiv = document.getElementById('resources-list');
+            const countSpan = document.getElementById('res-count');
+
+            // Render existing
+            const q = query(coursesRef, orderBy('createdAt', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                countSpan.textContent = `${snapshot.docs.length} items`;
+                if (snapshot.empty) {
+                    listDiv.innerHTML = '<div class="text-center text-gray-500 py-10">Database is empty.</div>';
+                    return;
+                }
+
+                listDiv.innerHTML = snapshot.docs.map(docSnap => {
+                    const data = docSnap.data();
+                    const icon = data.type === 'pdf' ? 'fa-file-pdf text-red-400' : 
+                                 data.type === 'video' ? 'fa-video text-blue-400' : 'fa-link text-green-400';
+                    return `
+                        <div class="glass-panel p-4 flex justify-between items-center bg-black/20 hover:bg-white/5 transition-colors group border border-white/5">
+                            <div class="flex items-center gap-4 overflow-hidden">
+                                <div class="w-10 h-10 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas ${icon} text-lg"></i>
+                                </div>
+                                <div class="truncate">
+                                    <h4 class="font-sans font-medium text-white text-sm truncate">${data.title}</h4>
+                                    <p class="text-[10px] text-gray-500 font-mono mt-0.5">${data.category} • ${data.type.toUpperCase()}</p>
+                                </div>
+                            </div>
+                            <button onclick="deleteResource('${docSnap.id}')" class="text-gray-500 hover:text-red-400 p-2 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete record">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            });
+
+            // Add new
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btn-add-resource');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deploying...';
+                
+                try {
+                    await addDoc(coursesRef, {
+                        title: document.getElementById('res-title').value.trim(),
+                        category: document.getElementById('res-category').value,
+                        type: document.getElementById('res-type').value,
+                        url: document.getElementById('res-url').value.trim(),
+                        createdAt: serverTimestamp()
+                    });
+                    form.reset();
+                } catch(err) {
+                    console.error("Upload error:", err);
+                    alert("Failed to deploy resource. Check database rules.");
+                } finally {
+                    btn.innerHTML = orig;
+                }
+            });
+        }
+
+        // Global delete function for inline onclick handler
+        window.deleteResource = async (id) => {
+            if(confirm("DANGER: Confirm deletion of this record from the database?")) {
+                try {
+                    await deleteDoc(doc(db, 'courses', id));
+                } catch(e) {
+                    console.error(e);
+                    alert("Delete failed.");
+                }
+            }
+        };
+
+
+        // --- NAVIGATION LOGIC (SPA) ---
+        
+        const navLinks = document.querySelectorAll('.nav-link, .nav-link-mobile');
+        const sections = document.querySelectorAll('.page-section');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        function switchTab(targetId) {
+            sections.forEach(sec => sec.classList.remove('active'));
+            navLinks.forEach(l => l.classList.remove('active'));
+
+            const targetSec = document.getElementById(targetId);
+            if(targetSec) targetSec.classList.add('active');
+
+            document.querySelectorAll(`[data-target="${targetId}"]`).forEach(l => {
+                if(l.classList.contains('nav-link')) l.classList.add('active');
+            });
+            
+            mobileMenu.classList.add('hidden');
+            mobileMenu.classList.remove('flex');
+            document.querySelector('main').scrollTo({top:0, behavior: 'smooth'});
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab(link.getAttribute('data-target'));
+            });
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            mobileMenu.classList.add('flex');
+        });
+        document.getElementById('close-mobile-menu').addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            mobileMenu.classList.remove('flex');
+        });
+
+    </script>
+</body>
+</html>
+
